@@ -6,3 +6,4 @@ storage/
 .worktrees/
 .claude/settings.local.json
 .claude/worktrees/
+.superpowers/
