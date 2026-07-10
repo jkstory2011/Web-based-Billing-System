@@ -1,0 +1,151 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum CustomerType {
+  INDIVIDUAL
+  COMPANY
+}
+
+enum ContractStatus {
+  ACTIVE
+  TERMINATED
+}
+
+enum RecurringPeriod {
+  MONTHLY
+  QUARTERLY
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+}
+
+enum LineItemSource {
+  RECURRING
+  ADHOC
+}
+
+enum AdminRole {
+  SALES
+  ACCOUNTING
+  ADMIN
+}
+
+model Customer {
+  id             String      @id @default(uuid())
+  type           CustomerType
+  name           String
+  businessRegNo  String?
+  email          String      @unique
+  phone          String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  contracts      Contract[]
+  portalUser     PortalUser?
+}
+
+model Contract {
+  id             String                   @id @default(uuid())
+  customerId     String
+  customer       Customer                 @relation(fields: [customerId], references: [id])
+  startDate      DateTime
+  endDate        DateTime?
+  status         ContractStatus           @default(ACTIVE)
+  createdAt      DateTime                 @default(now())
+  updatedAt      DateTime                 @updatedAt
+  recurringItems ContractRecurringItem[]
+  adhocCharges   AdhocCharge[]
+  invoices       Invoice[]
+}
+
+model ContractRecurringItem {
+  id          String            @id @default(uuid())
+  contractId  String
+  contract    Contract          @relation(fields: [contractId], references: [id])
+  description String
+  period      RecurringPeriod
+  amount      Decimal           @db.Decimal(12, 2)
+  startDate   DateTime
+  endDate     DateTime?
+  createdAt   DateTime          @default(now())
+  lineItems   InvoiceLineItem[]
+}
+
+model AdhocCharge {
+  id                   String            @id @default(uuid())
+  contractId           String
+  contract             Contract          @relation(fields: [contractId], references: [id])
+  description          String
+  amount               Decimal           @db.Decimal(12, 2)
+  occurredOn           DateTime
+  createdByAdminUserId String
+  createdByAdminUser   AdminUser         @relation(fields: [createdByAdminUserId], references: [id])
+  createdAt            DateTime          @default(now())
+  lineItems            InvoiceLineItem[]
+}
+
+model Invoice {
+  id          String            @id @default(uuid())
+  contractId  String
+  contract    Contract          @relation(fields: [contractId], references: [id])
+  periodStart DateTime
+  periodEnd   DateTime
+  issueDate   DateTime?
+  dueDate     DateTime
+  status      InvoiceStatus     @default(DRAFT)
+  totalAmount Decimal           @db.Decimal(12, 2) @default(0)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  lineItems   InvoiceLineItem[]
+  pdfs        InvoicePdf[]
+}
+
+model InvoiceLineItem {
+  id              String                  @id @default(uuid())
+  invoiceId       String
+  invoice         Invoice                 @relation(fields: [invoiceId], references: [id])
+  description     String
+  quantity        Int                     @default(1)
+  unitPrice       Decimal                 @db.Decimal(12, 2)
+  amount          Decimal                 @db.Decimal(12, 2)
+  source          LineItemSource
+  recurringItemId String?
+  recurringItem   ContractRecurringItem?  @relation(fields: [recurringItemId], references: [id])
+  adhocChargeId   String?
+  adhocCharge     AdhocCharge?            @relation(fields: [adhocChargeId], references: [id])
+}
+
+model InvoicePdf {
+  id        String   @id @default(uuid())
+  invoiceId String
+  invoice   Invoice  @relation(fields: [invoiceId], references: [id])
+  version   Int
+  filePath  String
+  createdAt DateTime @default(now())
+
+  @@unique([invoiceId, version])
+}
+
+model AdminUser {
+  id           String        @id @default(uuid())
+  email        String        @unique
+  passwordHash String
+  role         AdminRole
+  createdAt    DateTime      @default(now())
+  adhocCharges AdhocCharge[]
+}
+
+model PortalUser {
+  id           String   @id @default(uuid())
+  customerId   String   @unique
+  customer     Customer @relation(fields: [customerId], references: [id])
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
