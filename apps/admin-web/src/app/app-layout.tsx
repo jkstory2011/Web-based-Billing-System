@@ -4,6 +4,7 @@ import { Button } from '../components/ui/button';
 
 export function AppLayout() {
   const { logout, role } = useAuth();
+  const canAccessInvoices = role === 'ACCOUNTING' || role === 'ADMIN';
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -11,6 +12,7 @@ export function AppLayout() {
         <nav className="flex items-center gap-4 text-sm font-medium text-slate-700">
           <Link to="/customers">고객</Link>
           <Link to="/contracts">계약</Link>
+          {canAccessInvoices && <Link to="/invoices/generate">청구서 생성</Link>}
         </nav>
         <div className="flex items-center gap-3 text-sm text-slate-600">
           <span>{role}</span>

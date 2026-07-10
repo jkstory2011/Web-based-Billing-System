@@ -67,3 +67,9 @@ export interface Invoice {
   lineItems?: InvoiceLineItem[];
   contract?: { customer: Customer };
 }
+
+export interface ContractInvoicePreview {
+  contractId: string;
+  recurringItems: ContractRecurringItem[];
+  adhocCharges: AdhocCharge[];
+}
