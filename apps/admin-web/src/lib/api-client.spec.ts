@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { server } from '../test/mock-server';
-import { apiRequest, ApiError } from './api-client';
+import { apiRequest, apiRequestBlob, ApiError } from './api-client';
 import { clearToken, setToken } from './auth-token';
 
 const API_URL = import.meta.env.VITE_API_URL as string;
@@ -67,5 +67,17 @@ describe('apiRequest', () => {
 
     expect(error).toBeInstanceOf(ApiError);
     expect((error as ApiError).status).toBe(401);
+  });
+
+  it('apiRequestBlob returns the response body as a Blob', async () => {
+    server.use(
+      http.get(`${API_URL}/admin/invoices/inv-1/pdf`, () =>
+        new HttpResponse(new Blob(['pdf-bytes']), { headers: { 'Content-Type': 'application/pdf' } }),
+      ),
+    );
+
+    const blob = await apiRequestBlob('/admin/invoices/inv-1/pdf');
+
+    expect(blob.type).toBe('application/pdf');
   });
 });

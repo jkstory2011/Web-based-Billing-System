@@ -41,3 +41,16 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
 
   return response.json() as Promise<T>;
 }
+
+export async function apiRequestBlob(path: string): Promise<Blob> {
+  const token = getToken();
+  const response = await fetch(`${API_URL}${path}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+
+  if (!response.ok) {
+    throw new ApiError(response.status, 'PDF를 불러오지 못했습니다.');
+  }
+
+  return response.blob();
+}

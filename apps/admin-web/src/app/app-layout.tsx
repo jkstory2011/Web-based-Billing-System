@@ -13,6 +13,7 @@ export function AppLayout() {
           <Link to="/customers">고객</Link>
           <Link to="/contracts">계약</Link>
           {canAccessInvoices && <Link to="/invoices/generate">청구서 생성</Link>}
+          {canAccessInvoices && <Link to="/invoices">청구서</Link>}
         </nav>
         <div className="flex items-center gap-3 text-sm text-slate-600">
           <span>{role}</span>

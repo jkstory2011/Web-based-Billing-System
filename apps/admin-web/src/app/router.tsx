@@ -8,7 +8,9 @@ import { CustomerCreatePage } from '../features/customers/customer-create-page';
 import { CustomerDetailPage } from '../features/customers/customer-detail-page';
 import { CustomerEditPage } from '../features/customers/customer-edit-page';
 import { CustomersListPage } from '../features/customers/customers-list-page';
+import { InvoiceDetailPage } from '../features/invoices/invoice-detail-page';
 import { InvoiceGeneratePage } from '../features/invoices/invoice-generate-page';
+import { InvoicesListPage } from '../features/invoices/invoices-list-page';
 import { AppLayout } from './app-layout';
 import { DashboardPage } from './dashboard-page';
 
@@ -28,6 +30,8 @@ export function AppRouter() {
             <Route path="/contracts/new" element={<ContractCreatePage />} />
             <Route path="/contracts/:id" element={<ContractDetailPage />} />
             <Route path="/invoices/generate" element={<InvoiceGeneratePage />} />
+            <Route path="/invoices" element={<InvoicesListPage />} />
+            <Route path="/invoices/:id" element={<InvoiceDetailPage />} />
           </Route>
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
