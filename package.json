@@ -1,0 +1,7 @@
+{
+  "name": "billing-system",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ]
+}
