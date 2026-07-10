@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { App } from './App';
 
 describe('App', () => {
-  it('renders the admin app title', () => {
+  it('redirects unauthenticated users to the login page', () => {
     render(<App />);
-    expect(screen.getByText('청구 시스템 관리자')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '관리자 로그인' })).toBeInTheDocument();
   });
 });
