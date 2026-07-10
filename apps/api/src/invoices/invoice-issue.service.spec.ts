@@ -39,9 +39,13 @@ describe('InvoiceIssueService', () => {
   });
 
   it('throws ConflictException when the invoice was already sent', async () => {
-    const { service, prisma } = buildService();
+    const { service, prisma, pdfService, pdfStorage, mailer } = buildService();
     prisma.invoice.findUniqueOrThrow.mockResolvedValue({ ...draftInvoice, status: 'SENT' });
 
     await expect(service.issueInvoice('invoice-1')).rejects.toThrow(ConflictException);
+
+    expect(pdfService.render).not.toHaveBeenCalled();
+    expect(pdfStorage.save).not.toHaveBeenCalled();
+    expect(mailer.sendInvoice).not.toHaveBeenCalled();
   });
 });
