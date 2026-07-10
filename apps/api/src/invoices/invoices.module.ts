@@ -6,14 +6,17 @@ import { InvoicePdfStorageService } from './invoice-pdf-storage.service';
 import { InvoiceIssueService } from './invoice-issue.service';
 import { INVOICE_MAILER } from './mailer/invoice-mailer.interface';
 import { NodemailerInvoiceMailer } from './mailer/nodemailer-invoice-mailer';
+import { PortalInvoicesController } from './portal-invoices.controller';
+import { PortalInvoicesService } from './portal-invoices.service';
 
 @Module({
-  controllers: [InvoicesController],
+  controllers: [InvoicesController, PortalInvoicesController],
   providers: [
     InvoiceGenerationService,
     InvoicePdfService,
     InvoicePdfStorageService,
     InvoiceIssueService,
+    PortalInvoicesService,
     { provide: INVOICE_MAILER, useClass: NodemailerInvoiceMailer },
   ],
   exports: [InvoiceGenerationService],
