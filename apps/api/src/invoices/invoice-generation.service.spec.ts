@@ -38,6 +38,7 @@ describe('InvoiceGenerationService', () => {
           Promise.resolve({ id: 'invoice-1', ...data, lineItems: data.lineItems.create }),
         ),
       },
+      $transaction: jest.fn((callback: any, _opts?: any) => callback(prisma)),
       ...overrides,
     } as any;
     return { service: new InvoiceGenerationService(prisma), prisma };
@@ -112,5 +113,63 @@ describe('InvoiceGenerationService', () => {
     const invoices = await service.generateInvoices(periodStart, periodEnd);
 
     expect(invoices).toEqual([]);
+  });
+
+  describe('QUARTERLY recurring items', () => {
+    const quarterlyItem = {
+      id: 'recurring-quarterly-1',
+      contractId: 'contract-1',
+      description: '분기 이용료',
+      period: 'QUARTERLY',
+      amount: 300000,
+      startDate: new Date('2026-01-01'),
+      endDate: null,
+    };
+
+    function buildQuarterlyService() {
+      return buildService({
+        contract: {
+          findMany: jest.fn().mockResolvedValue([
+            { ...contract, recurringItems: [quarterlyItem], adhocCharges: [] },
+          ]),
+        },
+      });
+    }
+
+    it('includes the quarterly item for 2026-01 (0 months since start)', async () => {
+      const { service } = buildQuarterlyService();
+
+      const previews = await service.previewGeneration(new Date('2026-01-01'), new Date('2026-01-31'));
+
+      expect(previews).toEqual([
+        { contractId: 'contract-1', recurringItems: [quarterlyItem], adhocCharges: [] },
+      ]);
+    });
+
+    it('includes the quarterly item for 2026-04 (3 months since start)', async () => {
+      const { service } = buildQuarterlyService();
+
+      const previews = await service.previewGeneration(new Date('2026-04-01'), new Date('2026-04-30'));
+
+      expect(previews).toEqual([
+        { contractId: 'contract-1', recurringItems: [quarterlyItem], adhocCharges: [] },
+      ]);
+    });
+
+    it('excludes the quarterly item for 2026-02 (1 month since start)', async () => {
+      const { service } = buildQuarterlyService();
+
+      const previews = await service.previewGeneration(new Date('2026-02-01'), new Date('2026-02-28'));
+
+      expect(previews).toEqual([]);
+    });
+
+    it('excludes the quarterly item for 2026-03 (2 months since start)', async () => {
+      const { service } = buildQuarterlyService();
+
+      const previews = await service.previewGeneration(new Date('2026-03-01'), new Date('2026-03-31'));
+
+      expect(previews).toEqual([]);
+    });
   });
 });
