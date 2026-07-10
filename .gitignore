@@ -4,3 +4,5 @@ coverage/
 .env
 storage/
 .worktrees/
+.claude/settings.local.json
+.claude/worktrees/
