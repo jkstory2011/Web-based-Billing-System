@@ -1,4 +1,5 @@
 import { ConflictException, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { CustomersService } from './customers.service';
 
 describe('CustomersService', () => {
@@ -49,5 +50,25 @@ describe('CustomersService', () => {
     });
 
     await expect(service.createPortalAccount('cust-1')).rejects.toThrow(ConflictException);
+  });
+
+  it('throws ConflictException when creating a customer with a duplicate email', async () => {
+    const { service, prisma } = buildService({
+      customer: {
+        create: jest.fn().mockRejectedValue(
+          new Prisma.PrismaClientKnownRequestError('Unique constraint failed on the fields: (`email`)', {
+            code: 'P2002',
+            clientVersion: '5.0.0',
+          }),
+        ),
+        findMany: jest.fn().mockResolvedValue([customer]),
+        findUnique: jest.fn().mockResolvedValue(customer),
+        update: jest.fn().mockResolvedValue(customer),
+      },
+    });
+
+    await expect(
+      service.create({ email: 'cust@example.com', name: 'ACME', type: 'COMPANY' } as any),
+    ).rejects.toThrow(ConflictException);
   });
 });
