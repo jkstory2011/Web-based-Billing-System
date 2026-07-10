@@ -1,10 +1,13 @@
-import { Body, Controller, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Res, UseGuards } from '@nestjs/common';
+import { Response } from 'express';
+import * as path from 'path';
 import { JwtAdminAuthGuard } from '../auth/jwt-admin-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { AdminRole } from '../auth/admin-role.enum';
 import { InvoiceGenerationService } from './invoice-generation.service';
 import { InvoiceIssueService } from './invoice-issue.service';
+import { InvoicesQueryService } from './invoices-query.service';
 import { GenerateInvoicesDto } from './dto/generate-invoices.dto';
 
 @Controller('admin/invoices')
@@ -14,7 +17,24 @@ export class InvoicesController {
   constructor(
     private readonly invoiceGenerationService: InvoiceGenerationService,
     private readonly invoiceIssueService: InvoiceIssueService,
+    private readonly invoicesQueryService: InvoicesQueryService,
   ) {}
+
+  @Get()
+  findAll() {
+    return this.invoicesQueryService.findAll();
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.invoicesQueryService.findOne(id);
+  }
+
+  @Get(':id/pdf')
+  async downloadPdf(@Param('id') id: string, @Res() res: Response) {
+    const filePath = await this.invoicesQueryService.getLatestPdfPath(id);
+    res.sendFile(path.resolve(filePath));
+  }
 
   @Post('preview')
   preview(@Body() dto: GenerateInvoicesDto) {

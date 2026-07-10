@@ -4,6 +4,7 @@ import { InvoiceGenerationService } from './invoice-generation.service';
 import { InvoicePdfService } from './invoice-pdf.service';
 import { InvoicePdfStorageService } from './invoice-pdf-storage.service';
 import { InvoiceIssueService } from './invoice-issue.service';
+import { InvoicesQueryService } from './invoices-query.service';
 import { INVOICE_MAILER } from './mailer/invoice-mailer.interface';
 import { NodemailerInvoiceMailer } from './mailer/nodemailer-invoice-mailer';
 import { PortalInvoicesController } from './portal-invoices.controller';
@@ -16,6 +17,7 @@ import { PortalInvoicesService } from './portal-invoices.service';
     InvoicePdfService,
     InvoicePdfStorageService,
     InvoiceIssueService,
+    InvoicesQueryService,
     PortalInvoicesService,
     { provide: INVOICE_MAILER, useClass: NodemailerInvoiceMailer },
   ],
