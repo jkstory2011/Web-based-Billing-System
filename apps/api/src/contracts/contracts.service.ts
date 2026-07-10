@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateContractDto } from './dto/create-contract.dto';
 import { CreateRecurringItemDto } from './dto/create-recurring-item.dto';
@@ -34,7 +34,10 @@ export class ContractsService {
   }
 
   async addRecurringItem(contractId: string, dto: CreateRecurringItemDto) {
-    await this.findOne(contractId);
+    const contract = await this.findOne(contractId);
+    if (contract.status === 'TERMINATED') {
+      throw new BadRequestException('해지된 계약에는 정기항목을 추가할 수 없습니다.');
+    }
     return this.prisma.contractRecurringItem.create({
       data: {
         contractId,
