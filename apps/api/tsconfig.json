@@ -17,5 +17,6 @@
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": true,
     "esModuleInterop": true
-  }
+  },
+  "exclude": ["node_modules", "dist", "prisma/**/*.ts"]
 }

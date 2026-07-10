@@ -1,4 +1,4 @@
-import { ConflictException, Inject, Injectable, Logger } from '@nestjs/common';
+import { ConflictException, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Invoice, InvoiceStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { InvoicePdfService } from './invoice-pdf.service';
@@ -17,10 +17,14 @@ export class InvoiceIssueService {
   ) {}
 
   async issueInvoice(invoiceId: string): Promise<Invoice> {
-    const invoice = await this.prisma.invoice.findUniqueOrThrow({
+    const invoice = await this.prisma.invoice.findUnique({
       where: { id: invoiceId },
       include: { lineItems: true, contract: { include: { customer: true } } },
     });
+
+    if (!invoice) {
+      throw new NotFoundException('청구서를 찾을 수 없습니다.');
+    }
 
     if (invoice.status === InvoiceStatus.SENT) {
       throw new ConflictException('이미 발송된 청구서입니다.');

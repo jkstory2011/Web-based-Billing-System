@@ -2,8 +2,8 @@ import { IsDateString } from 'class-validator';
 
 export class GenerateInvoicesDto {
   @IsDateString()
-  periodStart: string;
+  periodStart!: string;
 
   @IsDateString()
-  periodEnd: string;
+  periodEnd!: string;
 }

@@ -63,6 +63,8 @@ model Contract {
   recurringItems ContractRecurringItem[]
   adhocCharges   AdhocCharge[]
   invoices       Invoice[]
+
+  @@index([customerId])
 }
 
 model ContractRecurringItem {
@@ -76,6 +78,8 @@ model ContractRecurringItem {
   endDate     DateTime?
   createdAt   DateTime          @default(now())
   lineItems   InvoiceLineItem[]
+
+  @@index([contractId])
 }
 
 model AdhocCharge {
@@ -89,6 +93,9 @@ model AdhocCharge {
   createdByAdminUser   AdminUser         @relation(fields: [createdByAdminUserId], references: [id])
   createdAt            DateTime          @default(now())
   lineItems            InvoiceLineItem[]
+
+  @@index([contractId])
+  @@index([createdByAdminUserId])
 }
 
 model Invoice {
@@ -105,6 +112,8 @@ model Invoice {
   updatedAt   DateTime          @updatedAt
   lineItems   InvoiceLineItem[]
   pdfs        InvoicePdf[]
+
+  @@index([contractId])
 }
 
 model InvoiceLineItem {
@@ -120,6 +129,10 @@ model InvoiceLineItem {
   recurringItem   ContractRecurringItem?  @relation(fields: [recurringItemId], references: [id])
   adhocChargeId   String?
   adhocCharge     AdhocCharge?            @relation(fields: [adhocChargeId], references: [id])
+
+  @@index([invoiceId])
+  @@index([recurringItemId])
+  @@index([adhocChargeId])
 }
 
 model InvoicePdf {

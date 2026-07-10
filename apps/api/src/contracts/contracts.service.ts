@@ -8,7 +8,11 @@ import { CreateAdhocChargeDto } from './dto/create-adhoc-charge.dto';
 export class ContractsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  create(dto: CreateContractDto) {
+  async create(dto: CreateContractDto) {
+    const customer = await this.prisma.customer.findUnique({ where: { id: dto.customerId } });
+    if (!customer) {
+      throw new NotFoundException('고객을 찾을 수 없습니다.');
+    }
     return this.prisma.contract.create({
       data: {
         customerId: dto.customerId,

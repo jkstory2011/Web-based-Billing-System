@@ -3,17 +3,17 @@ import { RecurringPeriod } from '@prisma/client';
 
 export class CreateRecurringItemDto {
   @IsString()
-  description: string;
+  description!: string;
 
   @IsEnum(RecurringPeriod)
-  period: RecurringPeriod;
+  period!: RecurringPeriod;
 
   @IsNumber()
   @Min(0)
-  amount: number;
+  amount!: number;
 
   @IsDateString()
-  startDate: string;
+  startDate!: string;
 
   @IsOptional()
   @IsDateString()

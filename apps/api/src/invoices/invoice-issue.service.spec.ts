@@ -1,4 +1,4 @@
-import { ConflictException } from '@nestjs/common';
+import { ConflictException, NotFoundException } from '@nestjs/common';
 import { InvoiceIssueService } from './invoice-issue.service';
 
 describe('InvoiceIssueService', () => {
@@ -14,7 +14,7 @@ describe('InvoiceIssueService', () => {
   function buildService(overrides: any = {}) {
     const prisma = {
       invoice: {
-        findUniqueOrThrow: jest.fn().mockResolvedValue(draftInvoice),
+        findUnique: jest.fn().mockResolvedValue(draftInvoice),
         update: jest.fn().mockResolvedValue({ ...draftInvoice, status: 'SENT' }),
       },
       ...overrides,
@@ -40,9 +40,20 @@ describe('InvoiceIssueService', () => {
 
   it('throws ConflictException when the invoice was already sent', async () => {
     const { service, prisma, pdfService, pdfStorage, mailer } = buildService();
-    prisma.invoice.findUniqueOrThrow.mockResolvedValue({ ...draftInvoice, status: 'SENT' });
+    prisma.invoice.findUnique.mockResolvedValue({ ...draftInvoice, status: 'SENT' });
 
     await expect(service.issueInvoice('invoice-1')).rejects.toThrow(ConflictException);
+
+    expect(pdfService.render).not.toHaveBeenCalled();
+    expect(pdfStorage.save).not.toHaveBeenCalled();
+    expect(mailer.sendInvoice).not.toHaveBeenCalled();
+  });
+
+  it('throws NotFoundException when the invoice does not exist', async () => {
+    const { service, prisma, pdfService, pdfStorage, mailer } = buildService();
+    prisma.invoice.findUnique.mockResolvedValue(null);
+
+    await expect(service.issueInvoice('missing-invoice')).rejects.toThrow(NotFoundException);
 
     expect(pdfService.render).not.toHaveBeenCalled();
     expect(pdfStorage.save).not.toHaveBeenCalled();

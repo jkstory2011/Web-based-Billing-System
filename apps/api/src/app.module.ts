@@ -7,9 +7,18 @@ import { CustomersModule } from './customers/customers.module';
 import { ContractsModule } from './contracts/contracts.module';
 import { InvoicesModule } from './invoices/invoices.module';
 
+function validateEnv(config: Record<string, unknown>): Record<string, unknown> {
+  const required = ['DATABASE_URL', 'JWT_ADMIN_SECRET', 'JWT_PORTAL_SECRET'];
+  const missing = required.filter((key) => !config[key]);
+  if (missing.length > 0) {
+    throw new Error(`Missing required environment variable(s): ${missing.join(', ')}`);
+  }
+  return config;
+}
+
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({ isGlobal: true, validate: validateEnv }),
     PrismaModule,
     AuthModule,
     CustomersModule,

@@ -2,12 +2,12 @@ import { IsDateString, IsNumber, IsString, Min } from 'class-validator';
 
 export class CreateAdhocChargeDto {
   @IsString()
-  description: string;
+  description!: string;
 
   @IsNumber()
   @Min(0)
-  amount: number;
+  amount!: number;
 
   @IsDateString()
-  occurredOn: string;
+  occurredOn!: string;
 }

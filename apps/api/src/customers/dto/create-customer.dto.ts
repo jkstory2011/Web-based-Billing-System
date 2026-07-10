@@ -3,17 +3,17 @@ import { CustomerType } from '@prisma/client';
 
 export class CreateCustomerDto {
   @IsEnum(CustomerType)
-  type: CustomerType;
+  type!: CustomerType;
 
   @IsString()
-  name: string;
+  name!: string;
 
   @IsOptional()
   @IsString()
   businessRegNo?: string;
 
   @IsEmail()
-  email: string;
+  email!: string;
 
   @IsOptional()
   @IsString()

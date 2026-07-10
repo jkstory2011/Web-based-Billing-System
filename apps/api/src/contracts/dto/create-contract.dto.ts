@@ -2,10 +2,10 @@ import { IsDateString, IsOptional, IsUUID } from 'class-validator';
 
 export class CreateContractDto {
   @IsUUID()
-  customerId: string;
+  customerId!: string;
 
   @IsDateString()
-  startDate: string;
+  startDate!: string;
 
   @IsOptional()
   @IsDateString()
