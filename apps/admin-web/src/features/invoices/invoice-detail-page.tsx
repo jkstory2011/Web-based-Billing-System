@@ -13,6 +13,7 @@ export function InvoiceDetailPage() {
   const issueInvoice = useIssueInvoice(id!);
   const downloadPdf = useDownloadInvoicePdf();
   const [issueError, setIssueError] = useState<string | null>(null);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
 
   // Backend gates the entire /admin/invoices/* section to ACCOUNTING/ADMIN at the
   // controller level (SALES has zero access, not just to generate/issue). This
@@ -33,6 +34,15 @@ export function InvoiceDetailPage() {
       await issueInvoice.mutateAsync();
     } catch (err) {
       setIssueError(err instanceof ApiError ? err.message : '발행에 실패했습니다.');
+    }
+  }
+
+  async function handleDownload() {
+    setDownloadError(null);
+    try {
+      await downloadPdf.mutateAsync(id!);
+    } catch (err) {
+      setDownloadError(err instanceof ApiError ? err.message : 'PDF 다운로드에 실패했습니다.');
     }
   }
 
@@ -62,12 +72,13 @@ export function InvoiceDetailPage() {
           </Button>
         )}
         {invoice.status === 'SENT' && (
-          <Button onClick={() => downloadPdf.mutate(invoice.id)} disabled={downloadPdf.isPending}>
+          <Button onClick={handleDownload} disabled={downloadPdf.isPending}>
             {downloadPdf.isPending ? '다운로드 중...' : 'PDF 다운로드'}
           </Button>
         )}
       </div>
       {issueError && <p className="text-sm text-red-600">{issueError}</p>}
+      {downloadError && <p className="text-sm text-red-600">{downloadError}</p>}
       {issueInvoice.isSuccess && <p className="text-sm text-emerald-700">발행이 완료되어 이메일로 발송되었습니다.</p>}
     </div>
   );

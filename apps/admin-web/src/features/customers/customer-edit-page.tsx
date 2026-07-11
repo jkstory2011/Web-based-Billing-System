@@ -7,11 +7,12 @@ import { useCustomer, useUpdateCustomer } from './customers-api';
 export function CustomerEditPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { data: customer, isLoading } = useCustomer(id!);
+  const { data: customer, isLoading, error } = useCustomer(id!);
   const updateCustomer = useUpdateCustomer(id!);
   const [serverError, setServerError] = useState<string | null>(null);
 
-  if (isLoading || !customer) return <p>불러오는 중...</p>;
+  if (isLoading) return <p>불러오는 중...</p>;
+  if (error || !customer) return <p className="text-red-600">고객 정보를 불러오지 못했습니다.</p>;
 
   return (
     <div className="space-y-4">

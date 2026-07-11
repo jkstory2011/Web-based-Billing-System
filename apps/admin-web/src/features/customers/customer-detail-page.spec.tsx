@@ -3,7 +3,7 @@ import { http, HttpResponse } from 'msw';
 import { Route, Routes } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
 import { server } from '../../test/mock-server';
-import { renderWithProviders, SALES_TOKEN } from '../../test/render-with-providers';
+import { renderWithProviders, ACCOUNTING_TOKEN, SALES_TOKEN } from '../../test/render-with-providers';
 import { CustomerDetailPage } from './customer-detail-page';
 
 const API_URL = import.meta.env.VITE_API_URL as string;
@@ -39,5 +39,21 @@ describe('CustomerDetailPage', () => {
     fireEvent.click(screen.getByRole('button', { name: '포털 계정 발급' }));
 
     await waitFor(() => expect(screen.getByText(/temp-pass-123/)).toBeInTheDocument());
+  });
+
+  it('hides the edit link and portal-issue button for ACCOUNTING (view-only role)', async () => {
+    server.use(http.get(`${API_URL}/admin/customers/c1`, () => HttpResponse.json(customer)));
+
+    renderWithProviders(
+      <Routes>
+        <Route path="/customers/:id" element={<CustomerDetailPage />} />
+      </Routes>,
+      { token: ACCOUNTING_TOKEN, route: '/customers/c1' },
+    );
+
+    await waitFor(() => expect(screen.getByRole('heading', { name: '홍길동' })).toBeInTheDocument());
+
+    expect(screen.queryByRole('link', { name: '정보 수정' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '포털 계정 발급' })).not.toBeInTheDocument();
   });
 });
