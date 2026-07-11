@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Param, Post, Res, UseGuards } from '@nestjs/common';
 import { Response } from 'express';
 import * as path from 'path';
 import { JwtAdminAuthGuard } from '../auth/jwt-admin-auth.guard';
@@ -7,6 +7,7 @@ import { Roles } from '../auth/roles.decorator';
 import { AdminRole } from '../auth/admin-role.enum';
 import { InvoiceGenerationService } from './invoice-generation.service';
 import { InvoiceIssueService } from './invoice-issue.service';
+import { InvoiceReminderService } from './invoice-reminder.service';
 import { InvoicesQueryService } from './invoices-query.service';
 import { GenerateInvoicesDto } from './dto/generate-invoices.dto';
 
@@ -17,6 +18,7 @@ export class InvoicesController {
   constructor(
     private readonly invoiceGenerationService: InvoiceGenerationService,
     private readonly invoiceIssueService: InvoiceIssueService,
+    private readonly invoiceReminderService: InvoiceReminderService,
     private readonly invoicesQueryService: InvoicesQueryService,
   ) {}
 
@@ -49,5 +51,11 @@ export class InvoicesController {
   @Post(':id/issue')
   issue(@Param('id') id: string) {
     return this.invoiceIssueService.issueInvoice(id);
+  }
+
+  @Post(':id/remind')
+  @HttpCode(204)
+  remind(@Param('id') id: string) {
+    return this.invoiceReminderService.sendReminder(id);
   }
 }

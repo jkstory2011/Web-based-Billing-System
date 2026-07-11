@@ -1,10 +1,55 @@
 import { Link, Navigate } from 'react-router-dom';
+import { useState } from 'react';
 import Decimal from 'decimal.js';
+import { Button } from '../../components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
+import { ApiError } from '../../lib/api-client';
 import { useAuth } from '../auth/auth-context';
-import { useInvoices } from './invoices-api';
+import { useInvoices, useSendOverdueReminder } from './invoices-api';
+import type { Invoice } from '../../types/domain';
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
+
+function OverdueInvoiceRow({ invoice, daysOverdue }: { invoice: Invoice; daysOverdue: number }) {
+  const sendReminder = useSendOverdueReminder();
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  async function handleSendReminder() {
+    setFeedback(null);
+    try {
+      await sendReminder.mutateAsync(invoice.id);
+      setFeedback({ type: 'success', message: '알림을 발송했습니다.' });
+    } catch (err) {
+      setFeedback({ type: 'error', message: err instanceof ApiError ? err.message : '알림 발송에 실패했습니다.' });
+    }
+  }
+
+  return (
+    <TableRow>
+      <TableCell>
+        <Link to={`/invoices/${invoice.id}`} className="text-slate-900 underline">
+          {invoice.contract?.customer.name ?? invoice.contractId.slice(0, 8)}
+        </Link>
+      </TableCell>
+      <TableCell>
+        {invoice.periodStart.slice(0, 10)} ~ {invoice.periodEnd.slice(0, 10)}
+      </TableCell>
+      <TableCell>{invoice.dueDate.slice(0, 10)}</TableCell>
+      <TableCell>{daysOverdue}일</TableCell>
+      <TableCell>{new Decimal(invoice.totalAmount).toNumber().toLocaleString('ko-KR')}원</TableCell>
+      <TableCell>
+        <div className="space-y-1">
+          <Button onClick={handleSendReminder} disabled={sendReminder.isPending} className="bg-slate-200 text-slate-900 hover:bg-slate-300">
+            {sendReminder.isPending ? '발송 중...' : '미납 알림 발송'}
+          </Button>
+          {feedback && (
+            <p className={`text-xs ${feedback.type === 'success' ? 'text-emerald-700' : 'text-red-600'}`}>{feedback.message}</p>
+          )}
+        </div>
+      </TableCell>
+    </TableRow>
+  );
+}
 
 export function OverdueInvoicesPage() {
   const { role } = useAuth();
@@ -50,26 +95,13 @@ export function OverdueInvoicesPage() {
                 <TableHead>납부기한</TableHead>
                 <TableHead>연체일수</TableHead>
                 <TableHead>금액</TableHead>
+                <TableHead>알림</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {overdueInvoices.map((invoice) => {
                 const daysOverdue = Math.floor((now.getTime() - new Date(invoice.dueDate).getTime()) / MS_PER_DAY);
-                return (
-                  <TableRow key={invoice.id}>
-                    <TableCell>
-                      <Link to={`/invoices/${invoice.id}`} className="text-slate-900 underline">
-                        {invoice.contract?.customer.name ?? invoice.contractId.slice(0, 8)}
-                      </Link>
-                    </TableCell>
-                    <TableCell>
-                      {invoice.periodStart.slice(0, 10)} ~ {invoice.periodEnd.slice(0, 10)}
-                    </TableCell>
-                    <TableCell>{invoice.dueDate.slice(0, 10)}</TableCell>
-                    <TableCell>{daysOverdue}일</TableCell>
-                    <TableCell>{new Decimal(invoice.totalAmount).toNumber().toLocaleString('ko-KR')}원</TableCell>
-                  </TableRow>
-                );
+                return <OverdueInvoiceRow key={invoice.id} invoice={invoice} daysOverdue={daysOverdue} />;
               })}
             </TableBody>
           </Table>

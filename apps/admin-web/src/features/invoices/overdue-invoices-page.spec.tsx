@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react';
+import { screen, waitFor, fireEvent } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -87,6 +87,46 @@ describe('OverdueInvoicesPage', () => {
     );
 
     await waitFor(() => expect(screen.getByText('연체된 청구서가 없습니다.')).toBeInTheDocument());
+  });
+
+  it('sends an overdue reminder and shows a success message', async () => {
+    server.use(
+      http.get(`${API_URL}/admin/invoices`, () => HttpResponse.json(invoices)),
+      http.post(`${API_URL}/admin/invoices/invoice-overdue-1/remind`, () => new HttpResponse(null, { status: 204 })),
+    );
+
+    renderWithProviders(
+      <Routes>
+        <Route path="/invoices/overdue" element={<OverdueInvoicesPage />} />
+      </Routes>,
+      { token: ACCOUNTING_TOKEN, route: '/invoices/overdue' },
+    );
+
+    await waitFor(() => expect(screen.getByText('연체고객')).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: '미납 알림 발송' }));
+
+    await waitFor(() => expect(screen.getByText('알림을 발송했습니다.')).toBeInTheDocument());
+  });
+
+  it('shows an error message when sending the reminder fails', async () => {
+    server.use(
+      http.get(`${API_URL}/admin/invoices`, () => HttpResponse.json(invoices)),
+      http.post(`${API_URL}/admin/invoices/invoice-overdue-1/remind`, () =>
+        HttpResponse.json({ statusCode: 409, message: '아직 납부기한이 지나지 않았습니다.' }, { status: 409 }),
+      ),
+    );
+
+    renderWithProviders(
+      <Routes>
+        <Route path="/invoices/overdue" element={<OverdueInvoicesPage />} />
+      </Routes>,
+      { token: ACCOUNTING_TOKEN, route: '/invoices/overdue' },
+    );
+
+    await waitFor(() => expect(screen.getByText('연체고객')).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: '미납 알림 발송' }));
+
+    await waitFor(() => expect(screen.getByText('아직 납부기한이 지나지 않았습니다.')).toBeInTheDocument());
   });
 
   it('blocks SALES users, even via direct navigation', async () => {

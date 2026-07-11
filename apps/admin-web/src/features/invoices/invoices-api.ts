@@ -49,6 +49,12 @@ export function useIssueInvoice(id: string) {
   });
 }
 
+export function useSendOverdueReminder() {
+  return useMutation({
+    mutationFn: (id: string) => apiRequest<void>(`/admin/invoices/${id}/remind`, { method: 'POST' }),
+  });
+}
+
 export function useDownloadInvoicePdf() {
   return useMutation({
     mutationFn: async (id: string) => {
