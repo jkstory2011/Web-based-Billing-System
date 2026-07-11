@@ -1,0 +1,27 @@
+{
+  // Standalone TS program for src/test/setup.ts only, checked via its own
+  // `tsc --noEmit -p` invocation in package.json's "build" script (NOT
+  // wired in as a tsconfig.json project reference — a referenced composite
+  // project can't set "noEmit", and we don't want it emitting output). It
+  // needs Node's ambient types (for the `node:buffer` import used to
+  // polyfill jsdom's Blob for msw) but this file is excluded from
+  // tsconfig.json's ["src"] program, so those globals (Buffer, process,
+  // ...) do NOT leak into the app-wide type-checking, which deliberately
+  // restricts "types" to ["vitest/globals", "@testing-library/jest-dom"].
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "types": ["node", "vitest/globals", "@testing-library/jest-dom"]
+  },
+  "include": ["src/test/setup.ts"]
+}

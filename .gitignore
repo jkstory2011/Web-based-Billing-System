@@ -1,0 +1,12 @@
+node_modules/
+dist/
+coverage/
+.env
+storage/
+*.tsbuildinfo
+apps/admin-web/vite.config.js
+apps/admin-web/vite.config.d.ts
+.worktrees/
+.claude/settings.local.json
+.claude/worktrees/
+.superpowers/

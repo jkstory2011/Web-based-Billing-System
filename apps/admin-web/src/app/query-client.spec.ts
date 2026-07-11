@@ -1,0 +1,75 @@
+import { describe, expect, it, vi } from 'vitest';
+import { ApiError } from '../lib/api-client';
+import { createAppQueryClient } from './query-client';
+
+describe('createAppQueryClient', () => {
+  it('calls onUnauthorized when a query fails with a 401 ApiError', async () => {
+    const onUnauthorized = vi.fn();
+    const queryClient = createAppQueryClient(onUnauthorized);
+
+    await queryClient
+      .fetchQuery({
+        queryKey: ['test'],
+        queryFn: () => {
+          throw new ApiError(401, '인증이 만료되었습니다.');
+        },
+      })
+      .catch(() => undefined);
+
+    expect(onUnauthorized).toHaveBeenCalledOnce();
+  });
+
+  it('does not call onUnauthorized for non-401 errors', async () => {
+    const onUnauthorized = vi.fn();
+    const queryClient = createAppQueryClient(onUnauthorized);
+
+    await queryClient
+      .fetchQuery({
+        queryKey: ['test-2'],
+        queryFn: () => {
+          throw new ApiError(500, '서버 오류');
+        },
+      })
+      .catch(() => undefined);
+
+    expect(onUnauthorized).not.toHaveBeenCalled();
+  });
+
+  it('calls onUnauthorized when a mutation fails with a 401 ApiError', async () => {
+    // TanStack Query v5 keeps query and mutation errors on separate caches
+    // (QueryCache vs MutationCache). A 401 thrown by a useMutation call
+    // (used throughout later tasks for create/update actions) must also
+    // trigger the centralized logout handler, not just query failures.
+    const onUnauthorized = vi.fn();
+    const queryClient = createAppQueryClient(onUnauthorized);
+
+    await queryClient
+      .getMutationCache()
+      .build(queryClient, {
+        mutationFn: () => {
+          throw new ApiError(401, '인증이 만료되었습니다.');
+        },
+      })
+      .execute(undefined)
+      .catch(() => undefined);
+
+    expect(onUnauthorized).toHaveBeenCalledOnce();
+  });
+
+  it('does not call onUnauthorized when a mutation fails with a non-401 error', async () => {
+    const onUnauthorized = vi.fn();
+    const queryClient = createAppQueryClient(onUnauthorized);
+
+    await queryClient
+      .getMutationCache()
+      .build(queryClient, {
+        mutationFn: () => {
+          throw new ApiError(500, '서버 오류');
+        },
+      })
+      .execute(undefined)
+      .catch(() => undefined);
+
+    expect(onUnauthorized).not.toHaveBeenCalled();
+  });
+});

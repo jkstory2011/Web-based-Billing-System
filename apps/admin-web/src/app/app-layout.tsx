@@ -1,0 +1,30 @@
+import { Link, Outlet } from 'react-router-dom';
+import { useAuth } from '../features/auth/auth-context';
+import { Button } from '../components/ui/button';
+
+export function AppLayout() {
+  const { logout, role } = useAuth();
+  const canAccessInvoices = role === 'ACCOUNTING' || role === 'ADMIN';
+
+  return (
+    <div className="min-h-screen bg-slate-50">
+      <header className="flex items-center justify-between border-b bg-white px-6 py-3">
+        <nav className="flex items-center gap-4 text-sm font-medium text-slate-700">
+          <Link to="/customers">고객</Link>
+          <Link to="/contracts">계약</Link>
+          {canAccessInvoices && <Link to="/invoices/generate">청구서 생성</Link>}
+          {canAccessInvoices && <Link to="/invoices">청구서</Link>}
+        </nav>
+        <div className="flex items-center gap-3 text-sm text-slate-600">
+          <span>{role}</span>
+          <Button onClick={logout} className="bg-slate-200 text-slate-900 hover:bg-slate-300">
+            로그아웃
+          </Button>
+        </div>
+      </header>
+      <main className="p-6">
+        <Outlet />
+      </main>
+    </div>
+  );
+}
