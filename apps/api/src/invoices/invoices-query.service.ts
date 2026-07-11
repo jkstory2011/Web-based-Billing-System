@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Invoice } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { PaginatedResult } from '../common/pagination.types';
 
 @Injectable()
 export class InvoicesQueryService {
@@ -11,6 +12,19 @@ export class InvoicesQueryService {
       include: { contract: { include: { customer: true } } },
       orderBy: { createdAt: 'desc' },
     });
+  }
+
+  async findAllPaginated(page: number, limit: number): Promise<PaginatedResult<Invoice>> {
+    const [data, total] = await Promise.all([
+      this.prisma.invoice.findMany({
+        skip: (page - 1) * limit,
+        take: limit,
+        include: { contract: { include: { customer: true } } },
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.invoice.count(),
+    ]);
+    return { data, total, page, limit };
   }
 
   async findOne(id: string): Promise<Invoice> {

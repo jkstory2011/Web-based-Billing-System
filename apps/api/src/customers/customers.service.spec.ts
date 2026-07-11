@@ -12,6 +12,7 @@ describe('CustomersService', () => {
         findMany: jest.fn().mockResolvedValue([customer]),
         findUnique: jest.fn().mockResolvedValue(customer),
         update: jest.fn().mockResolvedValue(customer),
+        count: jest.fn().mockResolvedValue(1),
       },
       portalUser: {
         findUnique: jest.fn().mockResolvedValue(null),
@@ -21,6 +22,15 @@ describe('CustomersService', () => {
     } as any;
     return { service: new CustomersService(prisma), prisma };
   }
+
+  it('returns a page of customers with skip/take derived from page and limit', async () => {
+    const { service, prisma } = buildService();
+
+    const result = await service.findAllPaginated(2, 10);
+
+    expect(prisma.customer.findMany).toHaveBeenCalledWith({ skip: 10, take: 10 });
+    expect(result).toEqual({ data: [customer], total: 1, page: 2, limit: 10 });
+  });
 
   it('throws NotFoundException when the customer does not exist', async () => {
     const { service, prisma } = buildService();

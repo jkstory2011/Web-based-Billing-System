@@ -1,11 +1,18 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '../../lib/api-client';
-import type { AdhocCharge, Contract, ContractRecurringItem, RecurringPeriod } from '../../types/domain';
+import type { AdhocCharge, Contract, ContractRecurringItem, PaginatedResult, RecurringPeriod } from '../../types/domain';
 
 export function useContracts() {
   return useQuery({
     queryKey: ['contracts'],
     queryFn: () => apiRequest<Contract[]>('/admin/contracts'),
+  });
+}
+
+export function useContractsPaginated(page: number, limit: number) {
+  return useQuery({
+    queryKey: ['contracts', 'paginated', page, limit],
+    queryFn: () => apiRequest<PaginatedResult<Contract>>(`/admin/contracts?page=${page}&limit=${limit}`),
   });
 }
 

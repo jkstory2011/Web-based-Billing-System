@@ -1,5 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { Contract } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { PaginatedResult } from '../common/pagination.types';
 import { CreateContractDto } from './dto/create-contract.dto';
 import { CreateRecurringItemDto } from './dto/create-recurring-item.dto';
 import { CreateAdhocChargeDto } from './dto/create-adhoc-charge.dto';
@@ -24,6 +26,18 @@ export class ContractsService {
 
   findAll() {
     return this.prisma.contract.findMany({ include: { recurringItems: true, adhocCharges: true } });
+  }
+
+  async findAllPaginated(page: number, limit: number): Promise<PaginatedResult<Contract>> {
+    const [data, total] = await Promise.all([
+      this.prisma.contract.findMany({
+        skip: (page - 1) * limit,
+        take: limit,
+        include: { recurringItems: true, adhocCharges: true },
+      }),
+      this.prisma.contract.count(),
+    ]);
+    return { data, total, page, limit };
   }
 
   async findOne(id: string) {

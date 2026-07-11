@@ -1,11 +1,18 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '../../lib/api-client';
-import type { Customer, CustomerType } from '../../types/domain';
+import type { Customer, CustomerType, PaginatedResult } from '../../types/domain';
 
 export function useCustomers() {
   return useQuery({
     queryKey: ['customers'],
     queryFn: () => apiRequest<Customer[]>('/admin/customers'),
+  });
+}
+
+export function useCustomersPaginated(page: number, limit: number) {
+  return useQuery({
+    queryKey: ['customers', 'paginated', page, limit],
+    queryFn: () => apiRequest<PaginatedResult<Customer>>(`/admin/customers?page=${page}&limit=${limit}`),
   });
 }
 

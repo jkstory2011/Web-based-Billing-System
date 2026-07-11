@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiRequest, apiRequestBlob } from '../../lib/api-client';
-import type { ContractInvoicePreview, Invoice } from '../../types/domain';
+import type { ContractInvoicePreview, Invoice, PaginatedResult } from '../../types/domain';
 
 export interface GeneratePeriodInput {
   periodStart: string;
@@ -28,6 +28,13 @@ export function useInvoices(options: { enabled?: boolean } = {}) {
     queryKey: ['invoices'],
     queryFn: () => apiRequest<Invoice[]>('/admin/invoices'),
     enabled: options.enabled ?? true,
+  });
+}
+
+export function useInvoicesPaginated(page: number, limit: number) {
+  return useQuery({
+    queryKey: ['invoices', 'paginated', page, limit],
+    queryFn: () => apiRequest<PaginatedResult<Invoice>>(`/admin/invoices?page=${page}&limit=${limit}`),
   });
 }
 
