@@ -6,6 +6,8 @@ storage/
 *.tsbuildinfo
 apps/admin-web/vite.config.js
 apps/admin-web/vite.config.d.ts
+apps/portal-web/vite.config.js
+apps/portal-web/vite.config.d.ts
 .worktrees/
 .claude/settings.local.json
 .claude/worktrees/
