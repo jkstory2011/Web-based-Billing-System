@@ -33,9 +33,34 @@ describe('InvoicesListPage', () => {
     expect(screen.getByText('초안')).toBeInTheDocument();
   });
 
-  it('blocks SALES users from the invoice list, even via direct navigation', () => {
-    renderWithProviders(<InvoicesListPage />, { token: SALES_TOKEN });
+  it('blocks SALES users from the invoice list, even via direct navigation', async () => {
+    server.use(
+      http.get(`${API_URL}/admin/invoices`, () =>
+        HttpResponse.json([
+          {
+            id: 'invoice-1',
+            contractId: 'contract-1',
+            periodStart: '2026-07-01T00:00:00.000Z',
+            periodEnd: '2026-07-31T00:00:00.000Z',
+            dueDate: '2026-08-14T00:00:00.000Z',
+            issueDate: null,
+            status: 'DRAFT',
+            totalAmount: '150000',
+            contract: { customer: { name: '홍길동' } },
+          },
+        ]),
+      ),
+    );
+
+    const { queryClient } = renderWithProviders(<InvoicesListPage />, { token: SALES_TOKEN });
+
+    // Wait for the underlying query to genuinely settle. If this test only
+    // asserted synchronously (before the query resolves), it would pass
+    // trivially because of the page's `isLoading` gate, not because the role
+    // guard fired — regardless of whether the guard exists at all.
+    await waitFor(() => expect(queryClient.getQueryState(['invoices'])?.status).toBe('success'));
 
     expect(screen.queryByText('청구서 목록')).not.toBeInTheDocument();
+    expect(screen.queryByText('홍길동')).not.toBeInTheDocument();
   });
 });

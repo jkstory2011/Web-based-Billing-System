@@ -5,18 +5,24 @@ import { MemoryRouter } from 'react-router-dom';
 import { AuthProvider } from '../features/auth/auth-context';
 import { setToken } from '../lib/auth-token';
 
-export function renderWithProviders(ui: ReactElement, options: { token?: string; route?: string } = {}) {
+export function renderWithProviders(
+  ui: ReactElement,
+  options: { token?: string; route?: string; queryClient?: QueryClient } = {},
+) {
   if (options.token) {
     setToken(options.token);
   }
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  return render(
+  const queryClient = options.queryClient ?? new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const result = render(
     <MemoryRouter initialEntries={[options.route ?? '/']}>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>{ui}</AuthProvider>
       </QueryClientProvider>
     </MemoryRouter>,
   );
+  // Exposed so tests can assert on query lifecycle (e.g. proving a query has
+  // genuinely settled) instead of relying on synchronous DOM timing.
+  return { ...result, queryClient };
 }
 
 // header {"alg":"none"}, payload {"sub":"admin-1","role":"<ROLE>"}, no signature

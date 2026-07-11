@@ -1,4 +1,3 @@
-/// <reference types="node" />
 import '@testing-library/jest-dom/vitest';
 import { Blob as NodeBlob } from 'node:buffer';
 import { afterAll, afterEach, beforeAll } from 'vitest';
