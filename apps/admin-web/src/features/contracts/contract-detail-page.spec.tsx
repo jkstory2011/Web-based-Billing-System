@@ -54,6 +54,46 @@ describe('ContractDetailPage', () => {
     await waitFor(() => expect(screen.getByText(/월 이용료/)).toBeInTheDocument());
   });
 
+  it('omits endDate from the request body when the recurring item end date is left blank', async () => {
+    let capturedBody: Record<string, unknown> | null = null;
+
+    server.use(
+      http.get(`${API_URL}/admin/contracts/contract-1`, () => HttpResponse.json(contract)),
+      http.post(`${API_URL}/admin/contracts/contract-1/recurring-items`, async ({ request }) => {
+        capturedBody = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json({
+          id: 'item-1',
+          contractId: 'contract-1',
+          description: '월 이용료',
+          period: 'MONTHLY',
+          amount: '100000',
+          startDate: '2026-07-01',
+          endDate: null,
+        });
+      }),
+    );
+
+    renderWithProviders(
+      <Routes>
+        <Route path="/contracts/:id" element={<ContractDetailPage />} />
+      </Routes>,
+      { token: SALES_TOKEN, route: '/contracts/contract-1' },
+    );
+
+    await waitFor(() => expect(screen.getByText('등록된 정액항목이 없습니다.')).toBeInTheDocument());
+
+    fireEvent.change(screen.getAllByLabelText('설명')[0], { target: { value: '월 이용료' } });
+    fireEvent.change(screen.getAllByLabelText('금액')[0], { target: { value: '100000' } });
+    fireEvent.change(screen.getByLabelText('시작일'), { target: { value: '2026-07-01' } });
+    // Intentionally leave 종료일 (end date) blank — must not be sent as "".
+    fireEvent.click(screen.getAllByRole('button', { name: '추가' })[0]);
+
+    await waitFor(() => expect(screen.getByText(/월 이용료/)).toBeInTheDocument());
+    expect(capturedBody).not.toBeNull();
+    expect(capturedBody!.endDate).toBeUndefined();
+    expect('endDate' in capturedBody!).toBe(false);
+  });
+
   it('hides the recurring-item form but keeps the adhoc-charge form for ACCOUNTING', async () => {
     server.use(http.get(`${API_URL}/admin/contracts/contract-1`, () => HttpResponse.json(contract)));
 

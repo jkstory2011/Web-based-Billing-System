@@ -13,7 +13,11 @@ const recurringItemSchema = z.object({
   period: z.enum(['MONTHLY', 'QUARTERLY']),
   amount: z.coerce.number().min(0, '금액은 0 이상이어야 합니다.'),
   startDate: z.string().min(1, '시작일을 입력해주세요.'),
-  endDate: z.string().optional(),
+  // See contract-create-page.tsx: an untouched <input type="date"> submits "",
+  // which the backend's @IsOptional() @IsDateString() rejects as an invalid date
+  // (it only treats null/undefined as absent). Coerce "" to undefined so an
+  // ongoing recurring item with no end date round-trips as "field omitted".
+  endDate: z.string().optional().transform((v) => v || undefined),
 });
 
 // zod's z.coerce.number() gives the field an input type of `unknown` (it accepts
@@ -74,6 +78,10 @@ export function RecurringItemForm({ contractId }: { contractId: string }) {
         <Label htmlFor="recurring-startDate">시작일</Label>
         <Input id="recurring-startDate" type="date" {...register('startDate')} />
         {errors.startDate && <p className="text-sm text-red-600">{errors.startDate.message}</p>}
+      </div>
+      <div className="space-y-1">
+        <Label htmlFor="recurring-endDate">종료일 (선택)</Label>
+        <Input id="recurring-endDate" type="date" {...register('endDate')} />
       </div>
       {serverError && <p className="text-sm text-red-600">{serverError}</p>}
       <Button type="submit" disabled={isSubmitting}>

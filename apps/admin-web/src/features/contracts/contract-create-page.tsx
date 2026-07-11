@@ -13,7 +13,12 @@ import { useCreateContract, type CreateContractInput } from './contracts-api';
 const contractSchema = z.object({
   customerId: z.string().min(1, '고객을 선택해주세요.'),
   startDate: z.string().min(1, '시작일을 입력해주세요.'),
-  endDate: z.string().optional(),
+  // react-hook-form submits an untouched <input type="date"> as "" rather than
+  // undefined, and the backend's @IsOptional() @IsDateString() rejects "" as an
+  // invalid date string (IsOptional only treats null/undefined as absent). Coerce
+  // the empty string to undefined here so an ongoing contract with no end date
+  // round-trips as "field omitted" instead of a 400.
+  endDate: z.string().optional().transform((v) => v || undefined),
 });
 
 export function ContractCreatePage() {
