@@ -1,5 +1,5 @@
 import { screen, waitFor, fireEvent } from '@testing-library/react';
-import { http, HttpResponse } from 'msw';
+import { delay, http, HttpResponse } from 'msw';
 import { Route, Routes } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
 import { server } from '../../test/mock-server';
@@ -62,6 +62,41 @@ describe('InvoiceDetailPage', () => {
     fireEvent.click(screen.getByRole('button', { name: /발행/ }));
 
     await waitFor(() => expect(screen.getByText('메일 발송에 실패했습니다.')).toBeInTheDocument());
+  });
+
+  it('disables the issue button and shows a pending label while the request is in flight', async () => {
+    server.use(
+      http.get(`${API_URL}/admin/invoices/invoice-1`, () => HttpResponse.json(draftInvoice)),
+      http.post(`${API_URL}/admin/invoices/invoice-1/issue`, async () => {
+        await delay(50);
+        return HttpResponse.json({ ...draftInvoice, status: 'SENT', issueDate: '2026-07-11T00:00:00.000Z' });
+      }),
+    );
+
+    renderDetailPage();
+
+    await waitFor(() => expect(screen.getByText('월 이용료')).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: /발행/ }));
+
+    const pendingButton = await screen.findByRole('button', { name: '발행 중...' });
+    expect(pendingButton).toBeDisabled();
+
+    await waitFor(() => expect(screen.getByText('발행이 완료되어 이메일로 발송되었습니다.')).toBeInTheDocument());
+  });
+
+  it('shows an error message when the PDF download fails', async () => {
+    const sentInvoice = { ...draftInvoice, status: 'SENT', issueDate: '2026-07-11T00:00:00.000Z' };
+    server.use(
+      http.get(`${API_URL}/admin/invoices/invoice-1`, () => HttpResponse.json(sentInvoice)),
+      http.get(`${API_URL}/admin/invoices/invoice-1/pdf`, () => HttpResponse.json({ message: 'not found' }, { status: 404 })),
+    );
+
+    renderDetailPage();
+
+    await waitFor(() => expect(screen.getByText('월 이용료')).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: /PDF 다운로드/ }));
+
+    await waitFor(() => expect(screen.getByText('PDF를 불러오지 못했습니다.')).toBeInTheDocument());
   });
 
   it('blocks SALES users from the invoice detail page, even via direct navigation', async () => {
