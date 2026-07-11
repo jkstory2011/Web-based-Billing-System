@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npm run prisma:generate --workspace=api
+
+      - name: Audit dependencies (fail on high/critical)
+        run: npm audit --audit-level=high
+
+      - name: Test api
+        run: npm test --workspace=api
+
+      - name: Test admin-web
+        run: npm test --workspace=admin-web
+
+      - name: Test customer-portal-web
+        run: npm test --workspace=customer-portal-web
+
+      - name: Build api
+        run: npm run build --workspace=api
+
+      - name: Build admin-web
+        run: npm run build --workspace=admin-web
+
+      - name: Build customer-portal-web
+        run: npm run build --workspace=customer-portal-web
