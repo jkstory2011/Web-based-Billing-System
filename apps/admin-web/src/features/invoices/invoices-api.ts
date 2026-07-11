@@ -23,10 +23,11 @@ export function useGenerateInvoices() {
   });
 }
 
-export function useInvoices() {
+export function useInvoices(options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: ['invoices'],
     queryFn: () => apiRequest<Invoice[]>('/admin/invoices'),
+    enabled: options.enabled ?? true,
   });
 }
 
