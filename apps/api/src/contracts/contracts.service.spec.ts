@@ -10,6 +10,7 @@ describe('ContractsService', () => {
         create: jest.fn().mockResolvedValue(contract),
         findMany: jest.fn().mockResolvedValue([contract]),
         findUnique: jest.fn().mockResolvedValue(contract),
+        count: jest.fn().mockResolvedValue(1),
       },
       customer: {
         findUnique: jest.fn().mockResolvedValue({ id: 'cust-1' }),
@@ -24,6 +25,19 @@ describe('ContractsService', () => {
     } as any;
     return { service: new ContractsService(prisma), prisma };
   }
+
+  it('returns a page of contracts with skip/take derived from page and limit', async () => {
+    const { service, prisma } = buildService();
+
+    const result = await service.findAllPaginated(3, 5);
+
+    expect(prisma.contract.findMany).toHaveBeenCalledWith({
+      skip: 10,
+      take: 5,
+      include: { recurringItems: true, adhocCharges: true },
+    });
+    expect(result).toEqual({ data: [contract], total: 1, page: 3, limit: 5 });
+  });
 
   it('creates a contract for an existing customer', async () => {
     const { service, prisma } = buildService();

@@ -1,10 +1,11 @@
-import { Body, Controller, Get, HttpCode, Param, Post, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Param, Post, Query, Res, UseGuards } from '@nestjs/common';
 import { Response } from 'express';
 import * as path from 'path';
 import { JwtAdminAuthGuard } from '../auth/jwt-admin-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { AdminRole } from '../auth/admin-role.enum';
+import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 import { InvoiceGenerationService } from './invoice-generation.service';
 import { InvoiceIssueService } from './invoice-issue.service';
 import { InvoiceReminderService } from './invoice-reminder.service';
@@ -23,8 +24,11 @@ export class InvoicesController {
   ) {}
 
   @Get()
-  findAll() {
-    return this.invoicesQueryService.findAll();
+  findAll(@Query() query: PaginationQueryDto) {
+    if (query.page === undefined && query.limit === undefined) {
+      return this.invoicesQueryService.findAll();
+    }
+    return this.invoicesQueryService.findAllPaginated(query.page ?? 1, query.limit ?? 20);
   }
 
   @Get(':id')

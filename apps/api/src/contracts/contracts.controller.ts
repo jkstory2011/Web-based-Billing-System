@@ -1,8 +1,9 @@
-import { Body, Controller, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { JwtAdminAuthGuard } from '../auth/jwt-admin-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { AdminRole } from '../auth/admin-role.enum';
+import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 import { ContractsService } from './contracts.service';
 import { CreateContractDto } from './dto/create-contract.dto';
 import { CreateRecurringItemDto } from './dto/create-recurring-item.dto';
@@ -19,8 +20,11 @@ export class ContractsController {
 
   @Get()
   @Roles(AdminRole.SALES, AdminRole.ACCOUNTING, AdminRole.ADMIN)
-  findAll() {
-    return this.contractsService.findAll();
+  findAll(@Query() query: PaginationQueryDto) {
+    if (query.page === undefined && query.limit === undefined) {
+      return this.contractsService.findAll();
+    }
+    return this.contractsService.findAllPaginated(query.page ?? 1, query.limit ?? 20);
   }
 
   @Get(':id')

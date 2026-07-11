@@ -1,12 +1,17 @@
 import { Link, Navigate } from 'react-router-dom';
+import { useState } from 'react';
 import { StatusBadge } from '../../components/ui/badge';
+import { PaginationControls } from '../../components/ui/pagination-controls';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
 import { useAuth } from '../auth/auth-context';
-import { useInvoices } from './invoices-api';
+import { useInvoicesPaginated } from './invoices-api';
+
+const PAGE_SIZE = 20;
 
 export function InvoicesListPage() {
   const { role } = useAuth();
-  const { data: invoices, isLoading, error } = useInvoices();
+  const [page, setPage] = useState(1);
+  const { data: result, isLoading, error } = useInvoicesPaginated(page, PAGE_SIZE);
 
   // Backend gates the entire /admin/invoices/* section to ACCOUNTING/ADMIN at the
   // controller level (SALES has zero access, not just to generate/issue). This
@@ -19,7 +24,9 @@ export function InvoicesListPage() {
   }
 
   if (isLoading) return <p>불러오는 중...</p>;
-  if (error) return <p className="text-red-600">청구서 목록을 불러오지 못했습니다.</p>;
+  if (error || !result) return <p className="text-red-600">청구서 목록을 불러오지 못했습니다.</p>;
+
+  const totalPages = Math.max(1, Math.ceil(result.total / result.limit));
 
   return (
     <div className="space-y-4">
@@ -34,7 +41,7 @@ export function InvoicesListPage() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {invoices?.map((invoice) => (
+          {result.data.map((invoice) => (
             <TableRow key={invoice.id}>
               <TableCell>
                 <Link to={`/invoices/${invoice.id}`} className="text-slate-900 underline">
@@ -52,6 +59,12 @@ export function InvoicesListPage() {
           ))}
         </TableBody>
       </Table>
+      <PaginationControls
+        page={page}
+        totalPages={totalPages}
+        onPrev={() => setPage((current) => Math.max(1, current - 1))}
+        onNext={() => setPage((current) => Math.min(totalPages, current + 1))}
+      />
     </div>
   );
 }

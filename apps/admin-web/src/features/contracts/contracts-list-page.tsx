@@ -1,18 +1,24 @@
 import { Link } from 'react-router-dom';
+import { useState } from 'react';
 import { useAuth } from '../auth/auth-context';
 import { buttonClassName } from '../../components/ui/button';
+import { PaginationControls } from '../../components/ui/pagination-controls';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
-import { useContracts } from './contracts-api';
+import { useContractsPaginated } from './contracts-api';
 
 const STATUS_LABEL: Record<string, string> = { ACTIVE: '활성', TERMINATED: '해지' };
+const PAGE_SIZE = 20;
 
 export function ContractsListPage() {
   const { role } = useAuth();
-  const { data: contracts, isLoading, error } = useContracts();
+  const [page, setPage] = useState(1);
+  const { data: result, isLoading, error } = useContractsPaginated(page, PAGE_SIZE);
   const canCreate = role === 'SALES' || role === 'ADMIN';
 
   if (isLoading) return <p>불러오는 중...</p>;
-  if (error) return <p className="text-red-600">계약 목록을 불러오지 못했습니다.</p>;
+  if (error || !result) return <p className="text-red-600">계약 목록을 불러오지 못했습니다.</p>;
+
+  const totalPages = Math.max(1, Math.ceil(result.total / result.limit));
 
   return (
     <div className="space-y-4">
@@ -34,7 +40,7 @@ export function ContractsListPage() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {contracts?.map((contract) => (
+          {result.data.map((contract) => (
             <TableRow key={contract.id}>
               <TableCell>
                 <Link to={`/contracts/${contract.id}`} className="text-slate-900 underline">
@@ -48,6 +54,12 @@ export function ContractsListPage() {
           ))}
         </TableBody>
       </Table>
+      <PaginationControls
+        page={page}
+        totalPages={totalPages}
+        onPrev={() => setPage((current) => Math.max(1, current - 1))}
+        onNext={() => setPage((current) => Math.min(totalPages, current + 1))}
+      />
     </div>
   );
 }

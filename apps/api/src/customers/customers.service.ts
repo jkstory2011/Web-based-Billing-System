@@ -1,8 +1,9 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { randomBytes } from 'crypto';
 import * as bcrypt from 'bcryptjs';
-import { Prisma } from '@prisma/client';
+import { Customer, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { PaginatedResult } from '../common/pagination.types';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
 
@@ -23,6 +24,14 @@ export class CustomersService {
 
   findAll() {
     return this.prisma.customer.findMany();
+  }
+
+  async findAllPaginated(page: number, limit: number): Promise<PaginatedResult<Customer>> {
+    const [data, total] = await Promise.all([
+      this.prisma.customer.findMany({ skip: (page - 1) * limit, take: limit }),
+      this.prisma.customer.count(),
+    ]);
+    return { data, total, page, limit };
   }
 
   async findOne(id: string) {
