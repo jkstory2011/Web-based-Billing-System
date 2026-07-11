@@ -14,7 +14,7 @@ export class JwtPortalStrategy extends PassportStrategy(Strategy, 'jwt-portal') 
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: config.get<string>('JWT_PORTAL_SECRET'),
+      secretOrKey: config.get<string>('JWT_PORTAL_SECRET')!,
     });
   }
 
