@@ -25,6 +25,13 @@ enum RecurringPeriod {
 enum InvoiceStatus {
   DRAFT
   SENT
+  // Not yet reachable by any code path — no PG (payment gateway) is
+  // integrated. Reserved so the future payment-integration work can
+  // transition SENT -> PAID without another schema migration. See
+  // docs/superpowers/specs/2026-07-09-customer-contract-invoice-mvp-design.md
+  // ("Invoice.status는 향후 결제 연동 시 PAID 등 상태를 추가할 수 있도록
+  // 여유 있게 설계한다").
+  PAID
 }
 
 enum LineItemSource {
