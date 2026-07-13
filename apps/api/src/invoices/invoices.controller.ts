@@ -1,6 +1,7 @@
-import { Body, Controller, Get, HttpCode, Param, Post, Query, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Param, Post, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { Response } from 'express';
 import * as path from 'path';
+import { ReminderTrigger } from '@prisma/client';
 import { JwtAdminAuthGuard } from '../auth/jwt-admin-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -11,6 +12,11 @@ import { InvoiceIssueService } from './invoice-issue.service';
 import { InvoiceReminderService } from './invoice-reminder.service';
 import { InvoicesQueryService } from './invoices-query.service';
 import { GenerateInvoicesDto } from './dto/generate-invoices.dto';
+import { SendReminderDto } from './dto/send-reminder.dto';
+
+interface AuthenticatedRequest {
+  user: { userId: string; role: AdminRole };
+}
 
 @Controller('admin/invoices')
 @UseGuards(JwtAdminAuthGuard, RolesGuard)
@@ -59,7 +65,12 @@ export class InvoicesController {
 
   @Post(':id/remind')
   @HttpCode(204)
-  remind(@Param('id') id: string) {
-    return this.invoiceReminderService.sendReminder(id);
+  remind(@Param('id') id: string, @Body() dto: SendReminderDto, @Req() req: AuthenticatedRequest) {
+    return this.invoiceReminderService.sendReminder(id, dto.stage, ReminderTrigger.MANUAL, req.user.userId);
+  }
+
+  @Get(':id/reminders')
+  listReminders(@Param('id') id: string) {
+    return this.invoiceReminderService.listReminders(id);
   }
 }

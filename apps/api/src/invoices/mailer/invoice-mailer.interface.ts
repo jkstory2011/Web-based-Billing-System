@@ -1,3 +1,5 @@
+import { ReminderStage } from '@prisma/client';
+
 export interface SendInvoiceParams {
   toEmail: string;
   invoiceId: string;
@@ -12,6 +14,7 @@ export interface SendOverdueReminderParams {
   invoiceId: string;
   totalAmount: string;
   dueDate: Date;
+  stage: ReminderStage;
 }
 
 export interface InvoiceMailer {
