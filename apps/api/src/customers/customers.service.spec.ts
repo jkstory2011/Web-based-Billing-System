@@ -18,6 +18,9 @@ describe('CustomersService', () => {
         findUnique: jest.fn().mockResolvedValue(null),
         create: jest.fn().mockResolvedValue({ id: 'portal-1', customerId: 'cust-1' }),
       },
+      adminUser: {
+        findUnique: jest.fn().mockResolvedValue(null),
+      },
       ...overrides,
     } as any;
     return { service: new CustomersService(prisma), prisma };
@@ -80,5 +83,68 @@ describe('CustomersService', () => {
     await expect(
       service.create({ email: 'cust@example.com', name: 'ACME', type: 'COMPANY' } as any),
     ).rejects.toThrow(ConflictException);
+  });
+
+  it('includes the collection owner on findOne', async () => {
+    const { service, prisma } = buildService({
+      customer: {
+        findUnique: jest.fn().mockResolvedValue({ ...customer, collectionOwnerId: 'admin-1', collectionOwner: { id: 'admin-1', email: 'a@example.com' } }),
+      },
+    });
+
+    const result = await service.findOne('cust-1');
+
+    expect(prisma.customer.findUnique).toHaveBeenCalledWith({
+      where: { id: 'cust-1' },
+      include: { collectionOwner: { select: { id: true, email: true } } },
+    });
+    expect(result.collectionOwner).toEqual({ id: 'admin-1', email: 'a@example.com' });
+  });
+
+  it('sets the collection owner after verifying the admin exists', async () => {
+    const { service, prisma } = buildService({
+      adminUser: { findUnique: jest.fn().mockResolvedValue({ id: 'admin-1', email: 'a@example.com' }) },
+    });
+
+    await service.setCollectionOwner('cust-1', 'admin-1');
+
+    expect(prisma.adminUser.findUnique).toHaveBeenCalledWith({ where: { id: 'admin-1' } });
+    expect(prisma.customer.update).toHaveBeenCalledWith({
+      where: { id: 'cust-1' },
+      data: { collectionOwnerId: 'admin-1' },
+      include: { collectionOwner: { select: { id: true, email: true } } },
+    });
+  });
+
+  it('throws NotFoundException when assigning a non-existent admin as collection owner', async () => {
+    const { service, prisma } = buildService({
+      adminUser: { findUnique: jest.fn().mockResolvedValue(null) },
+    });
+
+    await expect(service.setCollectionOwner('cust-1', 'missing-admin')).rejects.toThrow(NotFoundException);
+    expect(prisma.customer.update).not.toHaveBeenCalled();
+  });
+
+  it('clears the collection owner when passed null, without checking adminUser', async () => {
+    const { service, prisma } = buildService({
+      adminUser: { findUnique: jest.fn() },
+    });
+
+    await service.setCollectionOwner('cust-1', null);
+
+    expect(prisma.adminUser.findUnique).not.toHaveBeenCalled();
+    expect(prisma.customer.update).toHaveBeenCalledWith({
+      where: { id: 'cust-1' },
+      data: { collectionOwnerId: null },
+      include: { collectionOwner: { select: { id: true, email: true } } },
+    });
+  });
+
+  it('sets the auto-reminder override', async () => {
+    const { service, prisma } = buildService();
+
+    await service.setAutoReminderOverride('cust-1', true);
+
+    expect(prisma.customer.update).toHaveBeenCalledWith({ where: { id: 'cust-1' }, data: { autoReminderOverride: true } });
   });
 });

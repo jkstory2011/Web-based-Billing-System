@@ -7,6 +7,8 @@ import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 import { CustomersService } from './customers.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
+import { UpdateCollectionOwnerDto } from './dto/update-collection-owner.dto';
+import { UpdateAutoReminderOverrideDto } from './dto/update-auto-reminder-override.dto';
 
 @Controller('admin/customers')
 @UseGuards(JwtAdminAuthGuard, RolesGuard)
@@ -48,5 +50,17 @@ export class CustomersController {
   @Roles(AdminRole.SALES, AdminRole.ADMIN)
   createPortalAccount(@Param('id') id: string) {
     return this.customersService.createPortalAccount(id);
+  }
+
+  @Patch(':id/collection-owner')
+  @Roles(AdminRole.ACCOUNTING, AdminRole.ADMIN)
+  setCollectionOwner(@Param('id') id: string, @Body() dto: UpdateCollectionOwnerDto) {
+    return this.customersService.setCollectionOwner(id, dto.adminUserId);
+  }
+
+  @Patch(':id/auto-reminder-override')
+  @Roles(AdminRole.ADMIN)
+  setAutoReminderOverride(@Param('id') id: string, @Body() dto: UpdateAutoReminderOverrideDto) {
+    return this.customersService.setAutoReminderOverride(id, dto.autoReminderOverride);
   }
 }

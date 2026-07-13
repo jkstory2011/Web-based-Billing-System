@@ -35,7 +35,10 @@ export class CustomersService {
   }
 
   async findOne(id: string) {
-    const customer = await this.prisma.customer.findUnique({ where: { id } });
+    const customer = await this.prisma.customer.findUnique({
+      where: { id },
+      include: { collectionOwner: { select: { id: true, email: true } } },
+    });
     if (!customer) {
       throw new NotFoundException('고객을 찾을 수 없습니다.');
     }
@@ -45,6 +48,26 @@ export class CustomersService {
   async update(id: string, dto: UpdateCustomerDto) {
     await this.findOne(id);
     return this.prisma.customer.update({ where: { id }, data: dto });
+  }
+
+  async setCollectionOwner(id: string, adminUserId: string | null) {
+    await this.findOne(id);
+    if (adminUserId !== null) {
+      const admin = await this.prisma.adminUser.findUnique({ where: { id: adminUserId } });
+      if (!admin) {
+        throw new NotFoundException('담당자로 지정할 관리자를 찾을 수 없습니다.');
+      }
+    }
+    return this.prisma.customer.update({
+      where: { id },
+      data: { collectionOwnerId: adminUserId },
+      include: { collectionOwner: { select: { id: true, email: true } } },
+    });
+  }
+
+  async setAutoReminderOverride(id: string, autoReminderOverride: boolean | null) {
+    await this.findOne(id);
+    return this.prisma.customer.update({ where: { id }, data: { autoReminderOverride } });
   }
 
   async createPortalAccount(id: string): Promise<{ email: string; temporaryPassword: string }> {
