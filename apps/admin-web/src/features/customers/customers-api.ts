@@ -65,7 +65,13 @@ export function useSetCollectionOwner(customerId: string) {
   return useMutation({
     mutationFn: (adminUserId: string | null) =>
       apiRequest<Customer>(`/admin/customers/${customerId}/collection-owner`, { method: 'PATCH', body: { adminUserId } }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['customers', customerId] }),
+    // Write the mutation's response straight into the cache instead of
+    // invalidating: the same static-response-mock hazard documented on
+    // useUpdateSettings/useCreateCollectionNote applies here — an
+    // invalidate-triggered refetch of GET .../customers/:id would just
+    // re-request the customer and, under a static mock, silently drop the
+    // update this mutation just made.
+    onSuccess: (data) => queryClient.setQueryData(['customers', customerId], data),
   });
 }
 
@@ -77,7 +83,8 @@ export function useSetAutoReminderOverride(customerId: string) {
         method: 'PATCH',
         body: { autoReminderOverride },
       }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['customers', customerId] }),
+    // Same rationale as useSetCollectionOwner above.
+    onSuccess: (data) => queryClient.setQueryData(['customers', customerId], data),
   });
 }
 

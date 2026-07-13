@@ -95,9 +95,13 @@ describe('CustomerDetailPage', () => {
     renderDetailPage(ADMIN_TOKEN);
 
     await waitFor(() => expect(screen.getByText('담당자')).toBeInTheDocument());
+    expect(screen.getByText('현재 담당자: 미지정')).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText('담당자 선택'), { target: { value: 'admin-1' } });
 
-    await waitFor(() => expect(screen.getByText(/accounting@example.com/)).toBeInTheDocument());
+    // Assert on the specific "현재 담당자: ..." text (not just that the
+    // admin's email happens to also appear as an <option> in the picker
+    // dropdown) so this genuinely verifies the mutation result was applied.
+    await waitFor(() => expect(screen.getByText('현재 담당자: accounting@example.com')).toBeInTheDocument());
   });
 
   it('shows the auto-reminder override control with the current global setting, only for ADMIN', async () => {
