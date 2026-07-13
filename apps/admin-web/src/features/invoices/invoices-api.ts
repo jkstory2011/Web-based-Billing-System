@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiRequest, apiRequestBlob } from '../../lib/api-client';
-import type { ContractInvoicePreview, Invoice, PaginatedResult } from '../../types/domain';
+import type { CollectionReminder, ContractInvoicePreview, Invoice, PaginatedResult, ReminderStage } from '../../types/domain';
 
 export interface GeneratePeriodInput {
   periodStart: string;
@@ -56,9 +56,22 @@ export function useIssueInvoice(id: string) {
   });
 }
 
+export function useInvoiceReminders(id: string, options: { enabled?: boolean } = {}) {
+  return useQuery({
+    queryKey: ['invoices', id, 'reminders'],
+    queryFn: () => apiRequest<CollectionReminder[]>(`/admin/invoices/${id}/reminders`),
+    enabled: options.enabled ?? true,
+  });
+}
+
 export function useSendOverdueReminder() {
+  const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => apiRequest<void>(`/admin/invoices/${id}/remind`, { method: 'POST' }),
+    mutationFn: ({ id, stage }: { id: string; stage: ReminderStage }) =>
+      apiRequest<void>(`/admin/invoices/${id}/remind`, { method: 'POST', body: { stage } }),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['invoices', variables.id, 'reminders'] });
+    },
   });
 }
 
