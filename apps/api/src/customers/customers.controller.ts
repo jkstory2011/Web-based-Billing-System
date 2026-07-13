@@ -1,19 +1,28 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { JwtAdminAuthGuard } from '../auth/jwt-admin-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { AdminRole } from '../auth/admin-role.enum';
 import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 import { CustomersService } from './customers.service';
+import { CollectionNotesService } from './collection-notes.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
 import { UpdateCollectionOwnerDto } from './dto/update-collection-owner.dto';
 import { UpdateAutoReminderOverrideDto } from './dto/update-auto-reminder-override.dto';
+import { CreateCollectionNoteDto } from './dto/create-collection-note.dto';
+
+interface AuthenticatedRequest {
+  user: { userId: string; role: AdminRole };
+}
 
 @Controller('admin/customers')
 @UseGuards(JwtAdminAuthGuard, RolesGuard)
 export class CustomersController {
-  constructor(private readonly customersService: CustomersService) {}
+  constructor(
+    private readonly customersService: CustomersService,
+    private readonly collectionNotesService: CollectionNotesService,
+  ) {}
 
   @Get()
   @Roles(AdminRole.SALES, AdminRole.ACCOUNTING, AdminRole.ADMIN)
@@ -62,5 +71,17 @@ export class CustomersController {
   @Roles(AdminRole.ADMIN)
   setAutoReminderOverride(@Param('id') id: string, @Body() dto: UpdateAutoReminderOverrideDto) {
     return this.customersService.setAutoReminderOverride(id, dto.autoReminderOverride);
+  }
+
+  @Get(':id/collection-notes')
+  @Roles(AdminRole.ACCOUNTING, AdminRole.ADMIN)
+  listCollectionNotes(@Param('id') id: string) {
+    return this.collectionNotesService.listForCustomer(id);
+  }
+
+  @Post(':id/collection-notes')
+  @Roles(AdminRole.ACCOUNTING, AdminRole.ADMIN)
+  createCollectionNote(@Param('id') id: string, @Body() dto: CreateCollectionNoteDto, @Req() req: AuthenticatedRequest) {
+    return this.collectionNotesService.create(id, dto, req.user.userId);
   }
 }
