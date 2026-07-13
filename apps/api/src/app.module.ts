@@ -7,6 +7,7 @@ import { CustomersModule } from './customers/customers.module';
 import { ContractsModule } from './contracts/contracts.module';
 import { InvoicesModule } from './invoices/invoices.module';
 import { AdminUsersModule } from './admin-users/admin-users.module';
+import { SettingsModule } from './settings/settings.module';
 
 function validateEnv(config: Record<string, unknown>): Record<string, unknown> {
   const required = ['DATABASE_URL', 'JWT_ADMIN_SECRET', 'JWT_PORTAL_SECRET'];
@@ -26,6 +27,7 @@ function validateEnv(config: Record<string, unknown>): Record<string, unknown> {
     ContractsModule,
     InvoicesModule,
     AdminUsersModule,
+    SettingsModule,
   ],
   controllers: [AppController],
 })
