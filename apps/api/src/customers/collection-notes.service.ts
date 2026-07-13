@@ -35,6 +35,7 @@ export class CollectionNotesService {
         authorAdminUserId,
         body: dto.body,
       },
+      include: { authorAdminUser: true, invoice: true },
     });
   }
 

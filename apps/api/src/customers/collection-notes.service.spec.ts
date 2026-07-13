@@ -40,6 +40,7 @@ describe('CollectionNotesService', () => {
 
     expect(prisma.collectionNote.create).toHaveBeenCalledWith({
       data: { customerId: 'cust-1', invoiceId: null, authorAdminUserId: 'admin-1', body: '연락함' },
+      include: { authorAdminUser: true, invoice: true },
     });
   });
 
@@ -52,7 +53,18 @@ describe('CollectionNotesService', () => {
 
     expect(prisma.collectionNote.create).toHaveBeenCalledWith({
       data: { customerId: 'cust-1', invoiceId: 'inv-1', authorAdminUserId: 'admin-1', body: '분할 합의' },
+      include: { authorAdminUser: true, invoice: true },
     });
+  });
+
+  it('includes the author and invoice relations on the create response, matching listForCustomer', async () => {
+    const { service, prisma } = buildService();
+
+    await service.create('cust-1', { body: '연락함' }, 'admin-1');
+
+    expect(prisma.collectionNote.create).toHaveBeenCalledWith(
+      expect.objectContaining({ include: { authorAdminUser: true, invoice: true } }),
+    );
   });
 
   it('throws BadRequestException when the invoice belongs to a different customer', async () => {

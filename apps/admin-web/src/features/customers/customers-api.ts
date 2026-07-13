@@ -101,16 +101,17 @@ export function useCreateCollectionNote(customerId: string) {
   return useMutation({
     mutationFn: (input: { body: string; invoiceId?: string }) =>
       apiRequest<CollectionNote>(`/admin/customers/${customerId}/collection-notes`, { method: 'POST', body: input }),
-    // Append the created note straight into the cache instead of
+    // Prepend the created note straight into the cache instead of
     // invalidating: the same static-response-mock hazard documented on
     // useUpdateSettings above applies here — an invalidate-triggered
     // refetch of GET .../collection-notes would just re-request the list
     // and, under a static mock, silently drop the note this mutation just
-    // created.
+    // created. Prepend (not append) to match listForCustomer's
+    // orderBy: { createdAt: 'desc' } (newest first).
     onSuccess: (note) =>
       queryClient.setQueryData<CollectionNote[]>(['customers', customerId, 'collection-notes'], (prev) => [
-        ...(prev ?? []),
         note,
+        ...(prev ?? []),
       ]),
   });
 }

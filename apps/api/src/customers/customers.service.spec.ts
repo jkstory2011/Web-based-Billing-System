@@ -145,6 +145,20 @@ describe('CustomersService', () => {
 
     await service.setAutoReminderOverride('cust-1', true);
 
-    expect(prisma.customer.update).toHaveBeenCalledWith({ where: { id: 'cust-1' }, data: { autoReminderOverride: true } });
+    expect(prisma.customer.update).toHaveBeenCalledWith({
+      where: { id: 'cust-1' },
+      data: { autoReminderOverride: true },
+      include: { collectionOwner: { select: { id: true, email: true } } },
+    });
+  });
+
+  it('includes the collection owner relation on the auto-reminder-override response, matching findOne/setCollectionOwner', async () => {
+    const { service, prisma } = buildService();
+
+    await service.setAutoReminderOverride('cust-1', null);
+
+    expect(prisma.customer.update).toHaveBeenCalledWith(
+      expect.objectContaining({ include: { collectionOwner: { select: { id: true, email: true } } } }),
+    );
   });
 });

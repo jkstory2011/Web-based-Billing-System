@@ -67,7 +67,11 @@ export class CustomersService {
 
   async setAutoReminderOverride(id: string, autoReminderOverride: boolean | null) {
     await this.findOne(id);
-    return this.prisma.customer.update({ where: { id }, data: { autoReminderOverride } });
+    return this.prisma.customer.update({
+      where: { id },
+      data: { autoReminderOverride },
+      include: { collectionOwner: { select: { id: true, email: true } } },
+    });
   }
 
   async createPortalAccount(id: string): Promise<{ email: string; temporaryPassword: string }> {
