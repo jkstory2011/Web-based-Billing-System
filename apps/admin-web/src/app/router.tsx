@@ -13,6 +13,7 @@ import { InvoiceGeneratePage } from '../features/invoices/invoice-generate-page'
 import { InvoicesListPage } from '../features/invoices/invoices-list-page';
 import { OverdueInvoicesPage } from '../features/invoices/overdue-invoices-page';
 import { PaymentsPage } from '../features/payments/payments-page';
+import { SettingsPage } from '../features/settings/settings-page';
 import { AppLayout } from './app-layout';
 import { DashboardPage } from './dashboard-page';
 
@@ -36,6 +37,7 @@ export function AppRouter() {
             <Route path="/invoices" element={<InvoicesListPage />} />
             <Route path="/invoices/:id" element={<InvoiceDetailPage />} />
             <Route path="/payments" element={<PaymentsPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
           </Route>
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />

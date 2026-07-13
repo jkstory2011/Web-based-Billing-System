@@ -14,6 +14,9 @@ export interface Customer {
   phone: string | null;
   createdAt: string;
   updatedAt: string;
+  collectionOwnerId: string | null;
+  collectionOwner: AdminUserSummary | null;
+  autoReminderOverride: boolean | null;
 }
 
 export interface ContractRecurringItem {
@@ -79,4 +82,52 @@ export interface PaginatedResult<T> {
   total: number;
   page: number;
   limit: number;
+}
+
+export type ReminderStage = 'FIRST' | 'SECOND' | 'FINAL';
+export type ReminderTrigger = 'MANUAL' | 'AUTO';
+
+export interface AdminUserSummary {
+  id: string;
+  email: string;
+  role: AdminRole;
+}
+
+export interface CollectionReminder {
+  id: string;
+  invoiceId: string;
+  stage: ReminderStage;
+  triggeredBy: ReminderTrigger;
+  sentAt: string;
+  sentByAdminUserId: string | null;
+  sentByAdminUser: AdminUserSummary | null;
+}
+
+export interface CollectionNote {
+  id: string;
+  customerId: string;
+  invoiceId: string | null;
+  authorAdminUserId: string;
+  authorAdminUser: AdminUserSummary;
+  body: string;
+  createdAt: string;
+}
+
+export interface SystemSettings {
+  autoReminderEnabled: boolean;
+}
+
+export interface AgingBuckets {
+  d0to30: string;
+  d31to60: string;
+  d61to90: string;
+  d90plus: string;
+}
+
+export interface CustomerAgingSummary {
+  customerId: string;
+  customerName: string;
+  buckets: AgingBuckets;
+  totalOverdue: string;
+  invoiceCount: number;
 }
