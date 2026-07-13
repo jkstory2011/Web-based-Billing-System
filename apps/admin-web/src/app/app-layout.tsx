@@ -15,6 +15,7 @@ export function AppLayout() {
           {canAccessInvoices && <Link to="/invoices/generate">청구서 생성</Link>}
           {canAccessInvoices && <Link to="/invoices">청구서</Link>}
           {canAccessInvoices && <Link to="/invoices/overdue">미수금 관리</Link>}
+          {canAccessInvoices && <Link to="/collections/aging">채권 현황</Link>}
           {canAccessInvoices && <Link to="/payments">결제 연동</Link>}
           {role === 'ADMIN' && <Link to="/settings">설정</Link>}
         </nav>

@@ -1,6 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { LoginPage } from '../features/auth/login-page';
 import { ProtectedRoute } from '../features/auth/protected-route';
+import { AgingReportPage } from '../features/collections/aging-report-page';
 import { ContractCreatePage } from '../features/contracts/contract-create-page';
 import { ContractDetailPage } from '../features/contracts/contract-detail-page';
 import { ContractsListPage } from '../features/contracts/contracts-list-page';
@@ -34,6 +35,7 @@ export function AppRouter() {
             <Route path="/contracts/:id" element={<ContractDetailPage />} />
             <Route path="/invoices/generate" element={<InvoiceGeneratePage />} />
             <Route path="/invoices/overdue" element={<OverdueInvoicesPage />} />
+            <Route path="/collections/aging" element={<AgingReportPage />} />
             <Route path="/invoices" element={<InvoicesListPage />} />
             <Route path="/invoices/:id" element={<InvoiceDetailPage />} />
             <Route path="/payments" element={<PaymentsPage />} />
