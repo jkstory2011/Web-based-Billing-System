@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '../../lib/api-client';
-import type { Customer, CustomerType, PaginatedResult } from '../../types/domain';
+import type { CollectionNote, Customer, CustomerType, PaginatedResult } from '../../types/domain';
 
 export function useCustomers() {
   return useQuery({
@@ -57,5 +57,53 @@ export function useCreatePortalAccount(customerId: string) {
       apiRequest<{ email: string; temporaryPassword: string }>(`/admin/customers/${customerId}/portal-account`, {
         method: 'POST',
       }),
+  });
+}
+
+export function useSetCollectionOwner(customerId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (adminUserId: string | null) =>
+      apiRequest<Customer>(`/admin/customers/${customerId}/collection-owner`, { method: 'PATCH', body: { adminUserId } }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['customers', customerId] }),
+  });
+}
+
+export function useSetAutoReminderOverride(customerId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (autoReminderOverride: boolean | null) =>
+      apiRequest<Customer>(`/admin/customers/${customerId}/auto-reminder-override`, {
+        method: 'PATCH',
+        body: { autoReminderOverride },
+      }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['customers', customerId] }),
+  });
+}
+
+export function useCollectionNotes(customerId: string, options: { enabled?: boolean } = {}) {
+  return useQuery({
+    queryKey: ['customers', customerId, 'collection-notes'],
+    queryFn: () => apiRequest<CollectionNote[]>(`/admin/customers/${customerId}/collection-notes`),
+    enabled: options.enabled ?? true,
+  });
+}
+
+export function useCreateCollectionNote(customerId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { body: string; invoiceId?: string }) =>
+      apiRequest<CollectionNote>(`/admin/customers/${customerId}/collection-notes`, { method: 'POST', body: input }),
+    // Append the created note straight into the cache instead of
+    // invalidating: the same static-response-mock hazard documented on
+    // useUpdateSettings above applies here — an invalidate-triggered
+    // refetch of GET .../collection-notes would just re-request the list
+    // and, under a static mock, silently drop the note this mutation just
+    // created.
+    onSuccess: (note) =>
+      queryClient.setQueryData<CollectionNote[]>(['customers', customerId, 'collection-notes'], (prev) => [
+        ...(prev ?? []),
+        note,
+      ]),
   });
 }
